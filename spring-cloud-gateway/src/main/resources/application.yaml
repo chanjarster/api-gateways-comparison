@@ -1,0 +1,11 @@
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: tomcat_route
+          uri: http://tomcat:8080
+          predicates:
+            - Path=/**
+server:
+  port: 8082
