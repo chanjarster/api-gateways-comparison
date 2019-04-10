@@ -5,7 +5,7 @@ import scala.concurrent.duration._
 
 class Tomcat extends Simulation {
 
-  val tomcatConf = http.baseUrl("http://localhost:8080")
+  val tomcatConf = http.baseUrl("http://tomcat:9090")
 
   val book = during(BenchmarkConfig.totalDuring seconds) {
     exec(

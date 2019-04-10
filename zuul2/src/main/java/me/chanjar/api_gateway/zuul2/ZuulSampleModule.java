@@ -38,33 +38,34 @@ import com.netflix.zuul.stats.RequestMetricsPublisher;
 
 /**
  * Zuul Sample Module
- *
  * Author: Arthur Gonigberg
  * Date: November 20, 2017
  */
 public class ZuulSampleModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        // sample specific bindings
-        bind(BaseServerStartup.class).to(SampleServerStartup.class);
+  @Override
+  protected void configure() {
+    // sample specific bindings
+    bind(BaseServerStartup.class).to(SampleServerStartup.class);
 
-        // use provided basic netty origin manager
-        bind(OriginManager.class).to(BasicNettyOriginManager.class);
+    // use provided basic netty origin manager
+    bind(OriginManager.class).to(BasicNettyOriginManager.class);
 
-        // zuul filter loading
-        install(new ZuulFiltersModule());
-        bind(FilterFileManager.class).asEagerSingleton();
+    // zuul filter loading
+    install(new ZuulFiltersModule());
+    bind(FilterFileManager.class).asEagerSingleton();
 
-        // general server bindings
-        bind(ServerStatusManager.class); // health/discovery status
-        bind(SessionContextDecorator.class).to(ZuulSessionContextDecorator.class); // decorate new sessions when requests come in
-        bind(Registry.class).to(DefaultRegistry.class); // atlas metrics registry
-        bind(RequestCompleteHandler.class).to(BasicRequestCompleteHandler.class); // metrics post-request completion
-        bind(AbstractDiscoveryClientOptionalArgs.class).to(DiscoveryClient.DiscoveryClientOptionalArgs.class); // discovery client
-        bind(RequestMetricsPublisher.class).to(BasicRequestMetricsPublisher.class); // timings publisher
+    // general server bindings
+    bind(ServerStatusManager.class); // health/discovery status
+    bind(SessionContextDecorator.class)
+        .to(ZuulSessionContextDecorator.class); // decorate new sessions when requests come in
+    bind(Registry.class).to(DefaultRegistry.class); // atlas metrics registry
+    bind(RequestCompleteHandler.class).to(BasicRequestCompleteHandler.class); // metrics post-request completion
+    bind(AbstractDiscoveryClientOptionalArgs.class)
+        .to(DiscoveryClient.DiscoveryClientOptionalArgs.class); // discovery client
+    bind(RequestMetricsPublisher.class).to(BasicRequestMetricsPublisher.class); // timings publisher
 
-        // access logger, including request ID generator
-        bind(AccessLogPublisher.class).toInstance(new AccessLogPublisher("ACCESS",
-                (channel, httpRequest) -> ClientRequestReceiver.getRequestFromChannel(channel).getContext().getUUID()));
-    }
+    // access logger, including request ID generator
+    bind(AccessLogPublisher.class).toInstance(new AccessLogPublisher("ACCESS",
+        (channel, httpRequest) -> ClientRequestReceiver.getRequestFromChannel(channel).getContext().getUUID()));
+  }
 }

@@ -13,12 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package me.chanjar.api_gateway;
+package me.chanjar.api_gateway.netty;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 
 public class HexDumpProxyInitializer extends ChannelInitializer<SocketChannel> {
 

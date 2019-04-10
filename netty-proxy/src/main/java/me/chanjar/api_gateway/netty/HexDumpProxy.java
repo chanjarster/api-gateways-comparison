@@ -13,11 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package me.chanjar.api_gateway;
+package me.chanjar.api_gateway.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.kqueue.KQueueServerSocketChannel;
@@ -28,8 +29,8 @@ import io.netty.handler.logging.LoggingHandler;
 
 public final class HexDumpProxy {
 
-  static final int LOCAL_PORT = Integer.parseInt(System.getProperty("localPort", "8083"));
-  static final String REMOTE_HOST = System.getProperty("remoteHost", "localhost");
+  static final int LOCAL_PORT = Integer.parseInt(System.getProperty("localPort", "9090"));
+  static final String REMOTE_HOST = System.getProperty("remoteHost", "tomcat");
   static final int REMOTE_PORT = Integer.parseInt(System.getProperty("remotePort", "8080"));
 
   static final String SOCKET_TYPE = System.getProperty("socketType", "NIO").toUpperCase();
@@ -47,7 +48,6 @@ public final class HexDumpProxy {
       bossGroup = new NioEventLoopGroup(1);
       workerGroup = new NioEventLoopGroup();
       channelClass = NioServerSocketChannel.class;
-
       break;
     case "KQUEUE":
       bossGroup = new KQueueEventLoopGroup(1);
@@ -55,8 +55,8 @@ public final class HexDumpProxy {
       channelClass = KQueueServerSocketChannel.class;
       break;
     case "EPOLL":
-      bossGroup = new KQueueEventLoopGroup(1);
-      workerGroup = new KQueueEventLoopGroup();
+      bossGroup = new EpollEventLoopGroup(1);
+      workerGroup = new EpollEventLoopGroup();
       channelClass = EpollServerSocketChannel.class;
       break;
     }

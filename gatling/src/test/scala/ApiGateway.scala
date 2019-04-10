@@ -3,9 +3,9 @@ import io.gatling.http.Predef._
 
 import scala.concurrent.duration._
 
-class SpringCloudGateway extends Simulation {
+class ApiGateway extends Simulation {
 
-  val springCloudGatewayConf = http.baseUrl("http://localhost:8082")
+  val springCloudGatewayConf = http.baseUrl("http://api-gateway:8083")
 
 
   val book = during(BenchmarkConfig.totalDuring seconds) {
@@ -16,7 +16,7 @@ class SpringCloudGateway extends Simulation {
     )
   }
 
-  val scnSpringCloudGateway = scenario("Spring Cloud Gateway").exec(book)
+  val scnSpringCloudGateway = scenario("API Gateway").exec(book)
 
   setUp(
     scnSpringCloudGateway.inject(
