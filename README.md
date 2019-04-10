@@ -2,7 +2,7 @@
 
 比较不同的API Gateway实现，分为两大类：
 
-* 通用型：Nginx、Netty
+* 通用型：Nginx、Haproxy、Netty、
 * 专用型：Spring Cloud Gateway、Zuul2
 
 ## Benchmark
@@ -15,27 +15,39 @@
 
 新建文件`$TOMCAT_HOME/bin/setenv.sh`，内容`CATALINA_OPTS=-Xms1G -Xmx1G`
 
-
 ### 启动API Gateway
 
 弄一台机器启动不同类型的API Gateway，每次启动一个，然后用Gatling压。
 
-在这台机器的`/etc/hosts`下添加Tomcat服务器的host：
+启动好API Gateway之后，访问 http://<api-gateway-ip>:9090 看看是否能够看到Tomcat的首页。
 
 #### Nginx
 
-到[nginx](nginx)目录下，执行以下命令：
+执行以下命令：
 
 ```bash
 docker run -p 9090:80 \
   --rm \
   --add-host tomcat:<tomcat-ip> \ 
+  --name nginx \
   chanjarster/api-gateway-comp-nginx
 ```
 
 把上面的`<tomcat-ip>`成Tomcat所在服务器的地址。
 
-然后访问 http://localhost:9090 看看是否能够看到Tomcat的首页。
+#### Haproxy
+
+执行以下命令：
+
+```bash
+docker run -p 9090:80 \
+  --rm \
+  --add-host tomcat:<tomcat-ip> \ 
+  --name nginx \
+  chanjarster/api-gateway-comp-haproxy
+```
+
+把上面的`<tomcat-ip>`成Tomcat所在服务器的地址。
 
 #### Netty
 
@@ -43,8 +55,11 @@ docker run -p 9090:80 \
 
 ```bash
 docker run -p 9090:8080 \
+  -p 1099:1099 \
+  -p 1100:1100 \
   --rm \ 
   --add-host tomcat:<tomcat-ip> \
+  --name netty \
   -e JAVA_OPTS="-DsocketType=EPOLL" \
   -e HEAP_SIZE="1G" \
   chanjarster/api-gateway-comp-netty-proxy
@@ -58,8 +73,11 @@ socketType可以是EPOLL、KQUEUE、NIO（默认）
 
 ```bash
 docker run -p 9090:9090 \
+  -p 1099:1099 \
+  -p 1100:1100 \
   --rm \
   --add-host tomcat:<tomcat-ip> \
+  --name zuul2 \
   -e HEAP_SIZE="1G" \
   chanjarster/api-gateway-comp-zuul2
 ```
@@ -70,8 +88,11 @@ docker run -p 9090:9090 \
 
 ```bash
 docker run -p 9090:9090 \
+  -p 1099:1099 \
+  -p 1100:1100 \
   --rm \
   --add-host tomcat:<tomcat-ip> \
+  --name scg \
   -e HEAP_SIZE="1G" \
   -e JAVA_OPTS="-Dreactor.netty.native=true"
   chanjarster/api-gateway-comp-scg
