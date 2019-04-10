@@ -5,7 +5,7 @@ import scala.concurrent.duration._
 
 class ApiGateway extends Simulation {
 
-  val springCloudGatewayConf = http.baseUrl("http://api-gateway:8083")
+  val springCloudGatewayConf = http.baseUrl("http://api-gateway:9090")
 
 
   val book = during(BenchmarkConfig.totalDuring seconds) {
