@@ -2,26 +2,35 @@
 
 比较不同的API Gateway实现，分为两大类：
 
-* 通用型：Nginx、Haproxy、Netty、
-* 专用型：Spring Cloud Gateway、Zuul2
+* 反向代理：Nginx、Haproxy
+* 网络编程框架：Netty、Spring Webflux
+* API Gateway框架：Spring Cloud Gateway、Zuul2
 
 ## Benchmark
 
-### 准备Tomcat
+先准备三台配置一样的机器，分别用来运行Tomcat、API Gateway、Gatling。
 
-弄一台机器，下载一个Tomcat 8.5。
+其中Tomcat和API Gateway的配置得是一样的，Gatling的配置要稍好一些。
 
-修改server.xml，修改maxThreads、minSpareThreads（我用的是2000）
+每次启动一个API Gateway，访问 http://<api-gateway-ip>:9090 看看是否能够看到Tomcat的首页。
 
-新建文件`$TOMCAT_HOME/bin/setenv.sh`，内容`CATALINA_OPTS=-Xms1G -Xmx1G`
+然后用Gatling压。
 
-### 启动API Gateway
+### 启动Tomcat
 
-弄一台机器启动不同类型的API Gateway，每次启动一个，然后用Gatling压。
+执行以下命令：
 
-启动好API Gateway之后，访问 http://<api-gateway-ip>:9090 看看是否能够看到Tomcat的首页。
+```bash
+docker run -p 8080:8080 \
+  -p 1099:1099 \
+  -p 1100:1100 \
+  --rm \
+  --name tomcat \
+  -e HEAP_SIZE="1G" \
+  chanjarster/api-gateway-comp-tomcat
+```
 
-#### Nginx
+### 启动Nginx
 
 执行以下命令：
 
@@ -35,7 +44,7 @@ docker run -p 9090:80 \
 
 把上面的`<tomcat-ip>`成Tomcat所在服务器的地址。
 
-#### Haproxy
+### 启动Haproxy
 
 执行以下命令：
 
@@ -43,13 +52,13 @@ docker run -p 9090:80 \
 docker run -p 9090:80 \
   --rm \
   --add-host tomcat:<tomcat-ip> \ 
-  --name nginx \
+  --name haproxy \
   chanjarster/api-gateway-comp-haproxy
 ```
 
 把上面的`<tomcat-ip>`成Tomcat所在服务器的地址。
 
-#### Netty
+### 启动Netty
 
 执行下列命令：
 
@@ -67,7 +76,7 @@ docker run -p 9090:8080 \
 
 socketType可以是EPOLL、KQUEUE、NIO（默认）
 
-#### Zuul2
+### 启动Zuul2
 
 执行下列命令：
 
@@ -82,7 +91,7 @@ docker run -p 9090:9090 \
   chanjarster/api-gateway-comp-zuul2
 ```
 
-#### Spring Cloud Gateway
+### 启动Spring Cloud Gateway
 
 执行下列命令：
 
@@ -119,8 +128,14 @@ mvn gatling:test
 
 测完后到target/gatling目录下查看结果。
 
-
 ## 题外话
+
+### Nginx
+
+Nginx的参数调优参考的这两篇文章：
+
+* [NGINX Tuning For Best Performance](https://github.com/denji/nginx-tuning)
+* [Tuning NGINX for Performance](https://www.nginx.com/blog/tuning-nginx/)
 
 ### Netty
 
@@ -128,9 +143,13 @@ Netty proxy例子的代码来自于[Proxy Server](https://netty.io/4.1/xref/io/n
 
 ### Zuul2
 
-[zuul2](zuul2)的例子代码copy自[Zuul2的官方例子](https://github.com/Netflix/zuul/tree/2.1/zuul-sample)，不过改成了maven项目。
+[zuul2](zuul2)的例子代码copy自[Zuul2的官方例子](https://github.com/Netflix/zuul/tree/2.1/zuul-sample)，做了一下改动：
 
-在改造过程中发现Zuul2是用Gradle构建的，许多依赖都是runtime的，所以直接在Maven里这样做是不行的：
+1. 把gradle项目改成了maven项目
+1. 把Filter从groovy改成了java
+1. 去掉了动态加载groovy的配置
+
+在把gradle改成maven的过程中发现许多依赖都是runtime的，所以直接在Maven里这样做是不行的：
 
 ```xml
 <dependency>
