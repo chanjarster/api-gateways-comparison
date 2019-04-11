@@ -1,0 +1,10 @@
+{
+  "simulation": "ApiGateway",
+  "simulationId": "apigateway",
+  "start": 1554969109105,
+  "description": "SpringCloudGateway",
+  "scenarios": ["API Gateway"],
+  "assertions": [
+
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "simulation": "ApiGateway",
+  "simulationId": "apigateway",
+  "start": 1554967900508,
+  "description": "Zuul2",
+  "scenarios": ["API Gateway"],
+  "assertions": [
+
+  ]
+}

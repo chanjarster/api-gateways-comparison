@@ -1,8 +1,8 @@
 # API Gateway实现比较
 
-比较不同的API Gateway实现，分为两大类：
+比较不同的API Gateway实现，分为三大类：
 
-* 反向代理：Nginx、Haproxy
+* 通用反向代理：Nginx、Haproxy
 * 网络编程框架：Netty、Spring Webflux
 * API Gateway框架：Spring Cloud Gateway、Zuul2
 
@@ -155,15 +155,15 @@ mvn gatling:test -Dgatling.simulationClass=Tomcat
 再压API Gateway，记得在Run Description写上备注区分，比如：
 
 ```bash
-mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=Nginx
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=Nginx
 
-mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=Haproxy
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=Haproxy
 
-mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=Netty
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=Netty
 
-mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=SpringCloudGateway
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=SpringCloudGateway
 
-mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=Zuul2
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=Zuul2
 ```
 
 压API Gateway的时候要记得观察Tomcat的CPU利用率，如果利用率比直压的低，那么就要考虑修改API Gateway的参数。
@@ -171,6 +171,10 @@ mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=Zuul2
 压Netty、SpringCloudGateway、Zuul2的时候要先预热几遍。
 
 测完后到target/gatling目录下查看结果。
+
+## 结果
+
+我是在2核 4G上压的，结果在[benchmark-results](benchmark-results)目录下。
 
 ## 题外话
 
