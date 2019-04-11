@@ -12,6 +12,28 @@
 
 其中Tomcat和API Gateway的配置得是一样的，Gatling的配置要稍好一些。
 
+修改服务器的 /etc/security/limits.conf，添加以下内容：
+
+```txt
+*            soft    nofile          65536
+*            hard    nofile          200000
+*            soft    core            unlimited
+*            hard    core            unlimited
+*            soft    sigpending      90000
+*            hard    sigpending      90000
+*            soft    nproc           90000
+*            hard    nproc           90000
+```
+
+然后重启服务器，运行`ulimit -a`看看是否生效：
+
+```txt
+core file size          (blocks, -c) unlimited
+pending signals                 (-i) 90000
+open files                      (-n) 65536
+max user processes              (-u) 90000
+```
+
 每次启动一个API Gateway，访问 http://<api-gateway-ip>:9090 看看是否能够看到Tomcat的首页。
 
 然后用Gatling压。
@@ -24,9 +46,12 @@
 docker run -p 8080:8080 \
   -p 1099:1099 \
   -p 1100:1100 \
-  --rm \
+  -d \
   --name tomcat \
   -e HEAP_SIZE="1G" \
+  -e CONNECTOR_MAX_THREADS="1000" \
+  -e CONNECTOR_MIN_SPARE_THREADS="1000" \
+  -e EANBLE_ACCESS_LOG_VALVE="false" \
   chanjarster/api-gateway-comp-tomcat
 ```
 
@@ -36,9 +61,9 @@ docker run -p 8080:8080 \
 
 ```bash
 docker run -p 9090:80 \
-  --rm \
-  --add-host tomcat:<tomcat-ip> \ 
+  -d \
   --name nginx \
+  --add-host tomcat:<tomcat-ip> \ 
   chanjarster/api-gateway-comp-nginx
 ```
 
@@ -50,9 +75,9 @@ docker run -p 9090:80 \
 
 ```bash
 docker run -p 9090:80 \
-  --rm \
-  --add-host tomcat:<tomcat-ip> \ 
+  -d \
   --name haproxy \
+  --add-host tomcat:<tomcat-ip> \ 
   chanjarster/api-gateway-comp-haproxy
 ```
 
@@ -66,11 +91,11 @@ docker run -p 9090:80 \
 docker run -p 9090:8080 \
   -p 1099:1099 \
   -p 1100:1100 \
-  --rm \ 
-  --add-host tomcat:<tomcat-ip> \
+  -d \
   --name netty \
+  --add-host tomcat:<tomcat-ip> \
   -e JAVA_OPTS="-DsocketType=EPOLL" \
-  -e HEAP_SIZE="1G" \
+  -e HEAP_SIZE="2G" \
   chanjarster/api-gateway-comp-netty-proxy
 ```
 
@@ -84,10 +109,11 @@ socketType可以是EPOLL、KQUEUE、NIO（默认）
 docker run -p 9090:9090 \
   -p 1099:1099 \
   -p 1100:1100 \
-  --rm \
-  --add-host tomcat:<tomcat-ip> \
+  -d \
   --name zuul2 \
-  -e HEAP_SIZE="1G" \
+  --add-host tomcat:<tomcat-ip> \
+  -e HEAP_SIZE="2G" \
+  -e JAVA_OPTS="-Dzuul.server.netty.socket.epoll=true" \
   chanjarster/api-gateway-comp-zuul2
 ```
 
@@ -99,10 +125,10 @@ docker run -p 9090:9090 \
 docker run -p 9090:9090 \
   -p 1099:1099 \
   -p 1100:1100 \
-  --rm \
-  --add-host tomcat:<tomcat-ip> \
+  -d \
   --name scg \
-  -e HEAP_SIZE="1G" \
+  --add-host tomcat:<tomcat-ip> \
+  -e HEAP_SIZE="2G" \
   -e JAVA_OPTS="-Dreactor.netty.native=true"
   chanjarster/api-gateway-comp-scg
 ```
@@ -120,11 +146,29 @@ docker run -p 9090:9090 \
 
 到[gatling](gatling)目录下，执行：
 
+先压Tomcat获得基准数据，压的时候要观测Tomcat的JVM的CPU利用率，如果没有到~90%那么就加大线程数，直到Tomcat的CPU利用率能够到~90%，然后多压几次让JVM充分热身。
+
 ```bash
-mvn gatling:test
+mvn gatling:test -Dgatling.simulationClass=Tomcat
 ```
 
-先压Tomcat，然后压API Gateway，记得在Run Description写上备注区分。
+再压API Gateway，记得在Run Description写上备注区分，比如：
+
+```bash
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=Nginx
+
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=Haproxy
+
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=Netty
+
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=SpringCloudGateway
+
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -DrunDescription=Zuul2
+```
+
+压API Gateway的时候要记得观察Tomcat的CPU利用率，如果利用率比直压的低，那么就要考虑修改API Gateway的参数。
+
+压Netty、SpringCloudGateway、Zuul2的时候要先预热几遍。
 
 测完后到target/gatling目录下查看结果。
 
@@ -136,6 +180,14 @@ Nginx的参数调优参考的这两篇文章：
 
 * [NGINX Tuning For Best Performance](https://github.com/denji/nginx-tuning)
 * [Tuning NGINX for Performance](https://www.nginx.com/blog/tuning-nginx/)
+
+### Haproxy
+
+Haproxy的参数调优参考的这篇文章：
+
+* [Performance Tuning HAProxy](https://blog.codeship.com/performance-tuning-haproxy/)
+
+其中有一个很重要的参数`nbproc`，这个默认值是1，当你有多核CPU的时候可以设置更大。这个参数核Nginx的`worker_processes`类似，但是没有办法像Nginx那样设置为`auto`。
 
 ### Netty
 

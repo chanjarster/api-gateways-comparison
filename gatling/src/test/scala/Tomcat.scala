@@ -7,15 +7,15 @@ class Tomcat extends Simulation {
 
   val tomcatConf = http.baseUrl("http://tomcat:8080")
 
-  val book = during(BenchmarkConfig.totalDuring seconds) {
+  val servlet = during(BenchmarkConfig.totalDuring seconds) {
     exec(
-      http("book")
-        .get("/examples/jsp/jsp2/simpletag/book.jsp")
+      http("servlet")
+        .get(BenchmarkConfig.uri)
         .check(status.is(200))
     )
   }
 
-  val scnTomcat = scenario("Tomcat").exec(book)
+  val scnTomcat = scenario("Tomcat").exec(servlet)
 
   setUp(
     scnTomcat.inject(
