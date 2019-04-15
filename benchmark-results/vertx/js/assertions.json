@@ -1,0 +1,10 @@
+{
+  "simulation": "ApiGateway",
+  "simulationId": "apigateway",
+  "start": 1555144266323,
+  "description": "Vert.x",
+  "scenarios": ["API Gateway"],
+  "assertions": [
+
+  ]
+}
