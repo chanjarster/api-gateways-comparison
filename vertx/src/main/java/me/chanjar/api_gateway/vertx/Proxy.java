@@ -1,6 +1,7 @@
 package me.chanjar.api_gateway.vertx;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpClient;
@@ -19,7 +20,9 @@ public class Proxy extends AbstractVerticle {
   // Convenience method so you can run it in your IDE
   public static void main(String[] args) {
     Vertx vertx = Vertx.vertx(new VertxOptions().setPreferNativeTransport(true));
-    vertx.deployVerticle(Proxy.class.getName());
+    DeploymentOptions deploymentOptions = new DeploymentOptions()
+        .setInstances(Runtime.getRuntime().availableProcessors());
+    vertx.deployVerticle(Proxy.class.getName(), deploymentOptions);
   }
 
   @Override
