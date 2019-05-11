@@ -23,10 +23,10 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 
 public class HexDumpProxyBackendHandler extends ChannelInboundHandlerAdapter {
 
-    private final Channel inboundChannel;
+    private final Channel clientChannel;
 
-    public HexDumpProxyBackendHandler(Channel inboundChannel) {
-        this.inboundChannel = inboundChannel;
+    public HexDumpProxyBackendHandler(Channel clientChannel) {
+        this.clientChannel = clientChannel;
     }
 
     @Override
@@ -36,7 +36,7 @@ public class HexDumpProxyBackendHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object msg) {
-        inboundChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+        clientChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) {
                 if (future.isSuccess()) {
@@ -50,7 +50,7 @@ public class HexDumpProxyBackendHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        HexDumpProxyFrontendHandler.closeOnFlush(inboundChannel);
+        HexDumpProxyFrontendHandler.closeOnFlush(clientChannel);
     }
 
     @Override

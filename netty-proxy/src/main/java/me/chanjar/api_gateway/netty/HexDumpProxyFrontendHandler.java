@@ -30,8 +30,8 @@ public class HexDumpProxyFrontendHandler extends ChannelInboundHandlerAdapter {
     private final int remotePort;
 
     // As we use inboundChannel.eventLoop() when building the Bootstrap this does not need to be volatile as
-    // the outboundChannel will use the same EventLoop (and therefore Thread) as the inboundChannel.
-    private Channel outboundChannel;
+    // the originChannel will use the same EventLoop (and therefore Thread) as the inboundChannel.
+    private Channel originChannel;
 
     public HexDumpProxyFrontendHandler(String remoteHost, int remotePort) {
         this.remoteHost = remoteHost;
@@ -40,25 +40,26 @@ public class HexDumpProxyFrontendHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        final Channel inboundChannel = ctx.channel();
+        final Channel clientChannel = ctx.channel();
 
         // Start the connection attempt.
         Bootstrap b = new Bootstrap();
-        b.group(inboundChannel.eventLoop())
+        b.group(clientChannel.eventLoop())
          .channel(ctx.channel().getClass())
-         .handler(new HexDumpProxyBackendHandler(inboundChannel))
+         .handler(new HexDumpProxyBackendHandler(clientChannel))
          .option(ChannelOption.AUTO_READ, false);
         ChannelFuture f = b.connect(remoteHost, remotePort);
-        outboundChannel = f.channel();
+
+        originChannel = f.channel();
         f.addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) {
                 if (future.isSuccess()) {
                     // connection complete start to read first data
-                    inboundChannel.read();
+                    clientChannel.read();
                 } else {
                     // Close the connection if the connection attempt has failed.
-                    inboundChannel.close();
+                    clientChannel.close();
                 }
             }
         });
@@ -66,8 +67,8 @@ public class HexDumpProxyFrontendHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object msg) {
-        if (outboundChannel.isActive()) {
-            outboundChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+        if (originChannel.isActive()) {
+            originChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) {
                     if (future.isSuccess()) {
@@ -83,8 +84,8 @@ public class HexDumpProxyFrontendHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        if (outboundChannel != null) {
-            closeOnFlush(outboundChannel);
+        if (originChannel != null) {
+            closeOnFlush(originChannel);
         }
     }
 

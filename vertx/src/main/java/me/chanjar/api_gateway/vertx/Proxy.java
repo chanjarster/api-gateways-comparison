@@ -7,6 +7,7 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpServerResponse;
 
 /**
  * copy from <a href="https://github.com/vert-x3/vertx-examples/blob/master/core-examples/src/main/java/io/vertx/example/core/http/proxy/Proxy.java">Vertx Examples - Porxy</a>
@@ -30,33 +31,33 @@ public class Proxy extends AbstractVerticle {
 
     HttpClient client = vertx.createHttpClient(new HttpClientOptions());
     vertx.createHttpServer()
-        .requestHandler(req -> {
+        .requestHandler(clientReq -> {
 
-//          System.out.println("Proxying request: " + req.uri());
-
-          HttpClientRequest c_req = client.request(req.method(), REMOTE_PORT, REMOTE_HOST, req.uri(),
-              c_res -> {
-//                System.out.println("Proxying response: " + c_res.statusCode());
-                req.response().setChunked(true);
-                req.response().setStatusCode(c_res.statusCode());
-                req.response().headers().setAll(c_res.headers());
-                c_res.handler(data -> {
+          HttpServerResponse clientResp = clientReq.response();
+          //          System.out.println("Proxying request: " + clientReq.uri());
+          HttpClientRequest originReq = client.request(clientReq.method(), REMOTE_PORT, REMOTE_HOST, clientReq.uri(),
+              originResp -> {
+//                System.out.println("Proxying response: " + originResp.statusCode());
+                clientResp.setChunked(true);
+                clientResp.setStatusCode(originResp.statusCode());
+                clientResp.headers().setAll(originResp.headers());
+                originResp.handler(data -> {
 //                  System.out.println("Proxying response body: " + data.toString("ISO-8859-1"));
-                  req.response().write(data);
+                  clientResp.write(data);
                 });
-                c_res.endHandler((v) -> req.response().end());
+                originResp.endHandler((v) -> clientResp.end());
               });
 
-          c_req.setChunked(true);
+          originReq.setChunked(true);
 
-          c_req.headers().setAll(req.headers());
+          originReq.headers().setAll(clientReq.headers());
 
-          req.handler(data -> {
+          clientReq.handler(data -> {
 //            System.out.println("Proxying request body " + data.toString("ISO-8859-1"));
-            c_req.write(data);
+            originReq.write(data);
           });
 
-          req.endHandler((v) -> c_req.end());
+          clientReq.endHandler((v) -> originReq.end());
 
         }).listen(LOCAL_PORT);
   }
