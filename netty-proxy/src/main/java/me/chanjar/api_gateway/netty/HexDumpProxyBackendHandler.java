@@ -15,47 +15,43 @@
  */
 package me.chanjar.api_gateway.netty;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
 
 public class HexDumpProxyBackendHandler extends ChannelInboundHandlerAdapter {
 
-    private final Channel clientChannel;
+  private final Channel frontendChannel;
 
-    public HexDumpProxyBackendHandler(Channel clientChannel) {
-        this.clientChannel = clientChannel;
-    }
+  public HexDumpProxyBackendHandler(Channel frontendChannel) {
+    this.frontendChannel = frontendChannel;
+  }
 
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-        ctx.read();
-    }
+  @Override
+  public void channelActive(ChannelHandlerContext ctx) {
+    ctx.read();
+  }
 
-    @Override
-    public void channelRead(final ChannelHandlerContext ctx, Object msg) {
-        clientChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) {
-                if (future.isSuccess()) {
-                    ctx.channel().read();
-                } else {
-                    future.channel().close();
-                }
-            }
-        });
-    }
+  @Override
+  public void channelRead(final ChannelHandlerContext ctx, Object msg) {
+    frontendChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+      @Override
+      public void operationComplete(ChannelFuture future) {
+        if (future.isSuccess()) {
+          ctx.channel().read();
+        } else {
+          future.channel().close();
+        }
+      }
+    });
+  }
 
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) {
-        HexDumpProxyFrontendHandler.closeOnFlush(clientChannel);
-    }
+  @Override
+  public void channelInactive(ChannelHandlerContext ctx) {
+    HexDumpProxyFrontendHandler.closeOnFlush(frontendChannel);
+  }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
-        HexDumpProxyFrontendHandler.closeOnFlush(ctx.channel());
-    }
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+    cause.printStackTrace();
+    HexDumpProxyFrontendHandler.closeOnFlush(ctx.channel());
+  }
 }

@@ -17,90 +17,86 @@ package me.chanjar.api_gateway.netty;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelOption;
+import io.netty.channel.*;
 
 public class HexDumpProxyFrontendHandler extends ChannelInboundHandlerAdapter {
 
-    private final String remoteHost;
-    private final int remotePort;
+  private final String remoteHost;
+  private final int remotePort;
 
-    // As we use inboundChannel.eventLoop() when building the Bootstrap this does not need to be volatile as
-    // the originChannel will use the same EventLoop (and therefore Thread) as the inboundChannel.
-    private Channel originChannel;
+  // As we use inboundChannel.eventLoop() when building the Bootstrap this does not need to be volatile as
+  // the backendChannel will use the same EventLoop (and therefore Thread) as the inboundChannel.
+  private Channel backendChannel;
 
-    public HexDumpProxyFrontendHandler(String remoteHost, int remotePort) {
-        this.remoteHost = remoteHost;
-        this.remotePort = remotePort;
-    }
+  public HexDumpProxyFrontendHandler(String remoteHost, int remotePort) {
+    this.remoteHost = remoteHost;
+    this.remotePort = remotePort;
+  }
 
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-        final Channel clientChannel = ctx.channel();
+  @Override
+  public void channelActive(ChannelHandlerContext ctx) {
+    final Channel frontendChannel = ctx.channel();
 
-        // Start the connection attempt.
-        Bootstrap b = new Bootstrap();
-        b.group(clientChannel.eventLoop())
-         .channel(ctx.channel().getClass())
-         .handler(new HexDumpProxyBackendHandler(clientChannel))
-         .option(ChannelOption.AUTO_READ, false);
-        ChannelFuture f = b.connect(remoteHost, remotePort);
+    // Start the connection attempt.
+    Bootstrap b = new Bootstrap();
+    b
+      .group(frontendChannel.eventLoop())
+      .channel(ctx.channel().getClass())
+      .handler(new HexDumpProxyBackendHandler(frontendChannel))
+      .option(ChannelOption.AUTO_READ, false);
+    ChannelFuture f = b.connect(remoteHost, remotePort);
 
-        originChannel = f.channel();
-        f.addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) {
-                if (future.isSuccess()) {
-                    // connection complete start to read first data
-                    clientChannel.read();
-                } else {
-                    // Close the connection if the connection attempt has failed.
-                    clientChannel.close();
-                }
-            }
-        });
-    }
-
-    @Override
-    public void channelRead(final ChannelHandlerContext ctx, Object msg) {
-        if (originChannel.isActive()) {
-            originChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) {
-                    if (future.isSuccess()) {
-                        // was able to flush out data, start to read the next chunk
-                        ctx.channel().read();
-                    } else {
-                        future.channel().close();
-                    }
-                }
-            });
+    backendChannel = f.channel();
+    f.addListener(new ChannelFutureListener() {
+      @Override
+      public void operationComplete(ChannelFuture future) {
+        if (future.isSuccess()) {
+          // connection complete start to read first data
+          frontendChannel.read();
+        } else {
+          // Close the connection if the connection attempt has failed.
+          frontendChannel.close();
         }
-    }
+      }
+    });
+  }
 
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) {
-        if (originChannel != null) {
-            closeOnFlush(originChannel);
+  @Override
+  public void channelRead(final ChannelHandlerContext ctx, Object msg) {
+    if (backendChannel.isActive()) {
+      backendChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+        @Override
+        public void operationComplete(ChannelFuture future) {
+          if (future.isSuccess()) {
+            // was able to flush out data, start to read the next chunk
+            ctx.channel().read();
+          } else {
+            future.channel().close();
+          }
         }
+      });
     }
+  }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
-        closeOnFlush(ctx.channel());
+  @Override
+  public void channelInactive(ChannelHandlerContext ctx) {
+    if (backendChannel != null) {
+      closeOnFlush(backendChannel);
     }
+  }
 
-    /**
-     * Closes the specified channel after all queued write requests are flushed.
-     */
-    static void closeOnFlush(Channel ch) {
-        if (ch.isActive()) {
-            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-        }
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+    cause.printStackTrace();
+    closeOnFlush(ctx.channel());
+  }
+
+  /**
+   * Closes the specified channel after all queued write requests are flushed.
+   */
+  static void closeOnFlush(Channel ch) {
+    if (ch.isActive()) {
+      ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
     }
+  }
 }

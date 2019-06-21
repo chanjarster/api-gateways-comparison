@@ -24,8 +24,6 @@ import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.kqueue.KQueueServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 
 public final class HexDumpProxy {
 
@@ -64,11 +62,11 @@ public final class HexDumpProxy {
     try {
       ServerBootstrap b = new ServerBootstrap();
       b.group(bossGroup, workerGroup)
-          .channel(channelClass)
-//          .handler(new LoggingHandler(LogLevel.ERROR))
-          .childHandler(new HexDumpProxyInitializer(REMOTE_HOST, REMOTE_PORT))
-          .childOption(ChannelOption.AUTO_READ, false)
-          .bind(LOCAL_PORT).sync().channel().closeFuture().sync();
+        .channel(channelClass)
+        //          .handler(new LoggingHandler(LogLevel.ERROR))
+        .childHandler(new HexDumpProxyInitializer(REMOTE_HOST, REMOTE_PORT))
+        .childOption(ChannelOption.AUTO_READ, false)
+        .bind(LOCAL_PORT).sync().channel().closeFuture().sync();
     } finally {
       bossGroup.shutdownGracefully();
       workerGroup.shutdownGracefully();
