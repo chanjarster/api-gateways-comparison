@@ -1,5 +1,7 @@
 # API Gateway实现比较
 
+对应文章：https://chanjarster.github.io/post/api-gateway-perf-comparison/
+
 比较不同的API Gateway实现，分为三大类：
 
 * 通用反向代理：Nginx、Haproxy
