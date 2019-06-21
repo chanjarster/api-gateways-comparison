@@ -3,7 +3,7 @@
 比较不同的API Gateway实现，分为三大类：
 
 * 通用反向代理：Nginx、Haproxy
-* 网络编程框架：Netty、Spring Webflux
+* 网络编程框架：Netty、Reactor Netty、Spring Webflux
 * API Gateway框架：Spring Cloud Gateway、Zuul2
 
 ## Benchmark
@@ -135,6 +135,24 @@ docker run -p 9090:9090 \
 
 `reactor.netty.native`为true时使用epoll/kqueue，为false时则使用nio，默认为false。
 
+### 启动Reactor Netty
+
+执行下列命令：
+
+```bash
+docker run -p 9090:9090 \
+  -p 1099:1099 \
+  -p 1100:1100 \
+  -d \
+  --name reactor-netty \
+  --add-host tomcat:<tomcat-ip> \
+  -e HEAP_SIZE="2G" \
+  -e JAVA_OPTS="-Dreactor.netty.native=true" \
+  chanjarster/api-gateway-comp-reactor-netty
+```
+
+`reactor.netty.native`为true时使用epoll/kqueue，为false时则使用nio，默认为false。
+
 ### 启动Gatling
 
 先在`/etc/hosts`下配置的host：
@@ -164,11 +182,13 @@ mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=N
 mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=SpringCloudGateway
 
 mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=Zuul2
+
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=ReactorNetty
 ```
 
 压API Gateway的时候要记得观察Tomcat的CPU利用率，如果利用率比直压的低，那么就要考虑修改API Gateway的参数。
 
-压Netty、SpringCloudGateway、Zuul2的时候要先预热几遍。
+压Netty、SpringCloudGateway、Zuul2、Reactor Netty的时候要先预热几遍。
 
 测完后到target/gatling目录下查看结果。
 
@@ -196,6 +216,10 @@ Haproxy的参数调优参考的这篇文章：
 ### Netty
 
 Netty proxy例子的代码来自于[Proxy Server](https://netty.io/4.1/xref/io/netty/example/proxy/package-summary.html)
+
+### Reactory Netty
+
+修改自Netty的例子，不过因为Reactor Netty的抽象程度过高且缺乏例子（见这个[issue][reactor-netty-issue]），实现这个Proxy很不方便，最终还是采用通过其暴露出来的有限的底层API把Netty版本的ChannelHandler加进去的方式。虽然例子可运行，但是扩展性太差。
 
 ### Zuul2
 
@@ -234,3 +258,7 @@ Netty proxy例子的代码来自于[Proxy Server](https://netty.io/4.1/xref/io/n
 1. 在IDE里找出现错误的类在哪个包里
 1. 到dep.txt里看这个包是什么版本的
 1. 修改pom.xml里的版本
+
+
+
+[reactor-netty-issue]: https://github.com/violetagg/reactor-netty-workshop/issues/2
