@@ -12,7 +12,7 @@ import io.vertx.core.http.HttpServerResponse;
 /**
  * copy from <a href="https://github.com/vert-x3/vertx-examples/blob/master/core-examples/src/main/java/io/vertx/example/core/http/proxy/Proxy.java">Vertx Examples - Porxy</a>
  */
-public class Proxy extends AbstractVerticle {
+public class VertxProxy extends AbstractVerticle {
 
   static final int LOCAL_PORT = Integer.parseInt(System.getProperty("localPort", "9090"));
   static final String REMOTE_HOST = System.getProperty("remoteHost", "tomcat");
@@ -23,7 +23,7 @@ public class Proxy extends AbstractVerticle {
     Vertx vertx = Vertx.vertx(new VertxOptions().setPreferNativeTransport(true));
     DeploymentOptions deploymentOptions = new DeploymentOptions()
         .setInstances(Runtime.getRuntime().availableProcessors());
-    vertx.deployVerticle(Proxy.class.getName(), deploymentOptions);
+    vertx.deployVerticle(VertxProxy.class.getName(), deploymentOptions);
   }
 
   @Override
