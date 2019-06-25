@@ -8,9 +8,14 @@ import io.netty.handler.logging.LoggingHandler;
 
 public class FrontendHandlerInitializer extends ChannelInitializer<SocketChannel> {
 
+  private static final String ENABLE_LOG = System.getProperty("enableLog", "false").toUpperCase();
+
   @Override
   protected void initChannel(SocketChannel ch) throws Exception {
-//    ch.pipeline().addLast(new LoggingHandler(LogLevel.INFO));
+    if (ENABLE_LOG.equalsIgnoreCase("true")) {
+      ch.pipeline().addLast(new SimpleLoggingHandler("frontend"));
+    }
+
     ch.pipeline().addLast(new HttpRequestDecoder());
     ch.pipeline().addLast(new FrontendHandler());
   }

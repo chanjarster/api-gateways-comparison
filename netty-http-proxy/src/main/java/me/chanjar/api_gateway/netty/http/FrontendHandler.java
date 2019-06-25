@@ -43,37 +43,47 @@ public class FrontendHandler extends ChannelInboundHandlerAdapter {
 
     Channel frontendChannel = ctx.channel();
 
-    Bootstrap b = new Bootstrap();
-    b
-      .group(frontendChannel.eventLoop())
-      .channel(frontendChannel.getClass())
-      .handler(new BackendHandlerInitializer(frontendChannel))
-      .option(ChannelOption.AUTO_READ, false);
+    if (backendChannel == null) {
 
-    SocketAddress socketAddress = resolveBackendAddress(msg);
-    processHeaders(msg);
-    processUri(msg);
+      Bootstrap b = new Bootstrap();
+      b
+        .group(frontendChannel.eventLoop())
+        .channel(frontendChannel.getClass())
+        .handler(new BackendHandlerInitializer(frontendChannel))
+        .option(ChannelOption.AUTO_READ, false);
 
-    backendChannelFuture = b.connect(socketAddress);
-    backendChannel = backendChannelFuture.channel();
+      SocketAddress socketAddress = resolveBackendAddress(msg);
+      processHeaders(msg);
+      processUri(msg);
 
-    backendChannelFuture.addListener(new ChannelFutureListener() {
-      @Override
-      public void operationComplete(ChannelFuture future) throws Exception {
+      backendChannelFuture = b.connect(socketAddress);
+      backendChannel = backendChannelFuture.channel();
 
-        if (future.isSuccess()) {
-          writeBackend(frontendChannel, msg);
-        } else {
-          frontendChannel.close();
+      backendChannelFuture.addListener(new ChannelFutureListener() {
+        @Override
+        public void operationComplete(ChannelFuture future) throws Exception {
+
+          if (future.isSuccess()) {
+            writeBackend(frontendChannel, msg);
+          } else {
+            printStacktrace("backend connection failure", future);
+            frontendChannel.close();
+          }
+          future.removeListener(this);
         }
-        future.removeListener(this);
-      }
-    });
+      });
+
+    } else {
+
+      // channel 可能会有复用的情况，Http Keep-Alive，
+      writeBackend(frontendChannel, msg);
+
+    }
 
   }
 
   protected SocketAddress resolveBackendAddress(HttpRequest msg) {
-    return new InetSocketAddress("tomcat", 8080);
+    return InetSocketAddress.createUnresolved("tomcat", 8080);
   }
 
   protected void processHeaders(HttpRequest msg) {
@@ -86,6 +96,7 @@ public class FrontendHandler extends ChannelInboundHandlerAdapter {
   private void handleHttpContent(ChannelHandlerContext ctx, HttpContent msg) {
 
     final Channel frontendChannel = ctx.channel();
+
     if (backendChannel.isActive()) {
 
       writeBackend(frontendChannel, msg);
@@ -98,6 +109,7 @@ public class FrontendHandler extends ChannelInboundHandlerAdapter {
           if (future.isSuccess()) {
             writeBackend(frontendChannel, msg);
           } else {
+//            printStacktrace("backend connection failure", future);
             ReferenceCountUtil.release(msg);
           }
           future.removeListener(this);
@@ -116,6 +128,7 @@ public class FrontendHandler extends ChannelInboundHandlerAdapter {
         if (future.isSuccess()) {
           frontendChannel.read();
         } else {
+          printStacktrace("backend write failure", future);
           future.channel().close();
         }
       }
@@ -134,4 +147,10 @@ public class FrontendHandler extends ChannelInboundHandlerAdapter {
     ChannelUtils.closeOnFlush(ctx.channel());
   }
 
+  public void printStacktrace(String title, ChannelFuture future) {
+    System.out.println(title);
+    if (future.cause() != null) {
+      future.cause().printStackTrace();
+    }
+  }
 }
