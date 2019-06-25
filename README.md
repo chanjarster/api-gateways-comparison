@@ -90,7 +90,7 @@ docker run -p 9090:80 \
 执行下列命令：
 
 ```bash
-docker run -p 9090:8080 \
+docker run -p 9090:9090 \
   -p 1099:1099 \
   -p 1100:1100 \
   -d \
@@ -99,6 +99,26 @@ docker run -p 9090:8080 \
   -e JAVA_OPTS="-DsocketType=EPOLL" \
   -e HEAP_SIZE="2G" \
   chanjarster/api-gateway-comp-netty-proxy
+```
+
+socketType可以是EPOLL、KQUEUE、NIO（默认）
+
+### 启动Netty(Http)
+
+Netty(Http)和Netty一样，都是使用Netty来实现代理工作，只不过Netty工作在四层，而Netty(Http)工作在7层。
+
+执行下列命令：
+
+```bash
+docker run -p 9090:9090 \
+  -p 1099:1099 \
+  -p 1100:1100 \
+  -d \
+  --name netty-http \
+  --add-host tomcat:<tomcat-ip> \
+  -e JAVA_OPTS="-DsocketType=EPOLL" \
+  -e HEAP_SIZE="2G" \
+  chanjarster/api-gateway-comp-netty-http-proxy
 ```
 
 socketType可以是EPOLL、KQUEUE、NIO（默认）
