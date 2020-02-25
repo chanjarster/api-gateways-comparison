@@ -10,6 +10,18 @@ import (
 func makeProxy(backend string) http.HandlerFunc {
 	target, _ := url.Parse(backend)
 	reverseProxy := httputil.NewSingleHostReverseProxy(target)
+
+	cloneTransport := http.DefaultTransport.(*http.Transport).Clone()
+	cloneTransport.MaxIdleConns = 500
+	reverseProxy.Transport = cloneTransport
+
+	oldDirector := reverseProxy.Director
+	newDirector := func(req *http.Request) {
+		oldDirector(req)
+		req.Host = target.Host
+	}
+	reverseProxy.Director = newDirector
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		reverseProxy.ServeHTTP(w, r)
 	}
