@@ -5,7 +5,7 @@
 比较不同的API Gateway实现，分为三大类：
 
 * 通用反向代理：Nginx、Haproxy
-* 网络编程框架：Netty、Reactor Netty、Spring Webflux、Go http/net包、Go fasthttp包
+* 网络编程框架：Netty、Reactor Netty、Spring Webflux、Go net/http包、Go fasthttp包
 * API Gateway框架：Spring Cloud Gateway、Zuul2
 
 ## Benchmark
