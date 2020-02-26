@@ -5,7 +5,7 @@
 比较不同的API Gateway实现，分为三大类：
 
 * 通用反向代理：Nginx、Haproxy
-* 网络编程框架：Netty、Reactor Netty、Spring Webflux、Go http/net包
+* 网络编程框架：Netty、Reactor Netty、Spring Webflux、Go http/net包、Go fasthttp包
 * API Gateway框架：Spring Cloud Gateway、Zuul2
 
 ## Benchmark
@@ -185,6 +185,18 @@ docker run -p 9090:9090 \
   --name go-http \
   --add-host tomcat:<tomcat-ip> \
   chanjarster/api-gateway-comp-go-http
+```
+
+### 启动Go(fasthttp)
+
+执行下列命令：
+
+```bash
+docker run -p 9090:9090 \
+  -d \
+  --name go-fasthttp \
+  --add-host tomcat:<tomcat-ip> \
+  chanjarster/api-gateway-comp-go-fasthttp
 ```
 
 ### 启动Gatling

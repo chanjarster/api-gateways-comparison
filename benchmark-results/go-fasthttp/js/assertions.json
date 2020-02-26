@@ -1,0 +1,10 @@
+{
+  "simulation": "ApiGateway",
+  "simulationId": "apigateway",
+  "start": 1582685316961,
+  "description": "GoFastHttp",
+  "scenarios": ["API Gateway"],
+  "assertions": [
+
+  ]
+}
