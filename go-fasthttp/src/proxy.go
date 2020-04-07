@@ -15,7 +15,7 @@ func makeProxy(target string) routing.Handler {
 		ReadTimeout:         30 * time.Second,
 		WriteTimeout:        30 * time.Second,
 		MaxConnDuration:     5 * time.Second,
-		MaxConnsPerHost:     1024,
+		MaxConnsPerHost:     3000,
 		MaxIdleConnDuration: 5 * time.Minute,
 	}
 
@@ -29,6 +29,7 @@ func makeProxy(target string) routing.Handler {
 
 		if err := client.Do(req, resp); err != nil {
 			ctx.Logger().Printf("error when proxying the request: %s", err)
+			resp.SetStatusCode(fasthttp.StatusBadGateway)
 			return
 		}
 
