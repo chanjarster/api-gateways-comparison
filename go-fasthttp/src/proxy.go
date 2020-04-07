@@ -1,12 +1,15 @@
 package main
 
 import (
+	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/pprofhandler"
 	"log"
+	"runtime"
 	"time"
 )
 
-func makeProxy(target string) fasthttp.RequestHandler {
+func makeProxy(target string) routing.Handler {
 
 	client := &fasthttp.Client{
 		ReadTimeout:         30 * time.Second,
@@ -32,10 +35,32 @@ func makeProxy(target string) fasthttp.RequestHandler {
 		resp.Header.Del("Connection")
 	}
 
-	return handler
+	return func(ctx *routing.Context) error {
+		handler(ctx.RequestCtx)
+		return nil
+	}
+
+}
+
+func pprofHandler() routing.Handler {
+
+	// 设置Profile相关参数
+	runtime.SetBlockProfileRate(1)
+	runtime.SetMutexProfileFraction(1)
+
+	return func(ctx *routing.Context) error {
+		pprofhandler.PprofHandler(ctx.RequestCtx)
+		return nil
+	}
+
 }
 
 func main() {
 	log.Println("Start listening on :9090")
-	log.Fatal(fasthttp.ListenAndServe(":9090", makeProxy("tomcat:8080")))
+
+	router := routing.New()
+	router.Any("/debug/pprof/*", pprofHandler())
+	router.Any("/*", makeProxy("tomcat:8080"))
+
+	log.Fatal(fasthttp.ListenAndServe(":9090", router.HandleRequest))
 }
