@@ -12,11 +12,11 @@ import (
 func makeProxy(target string) routing.Handler {
 
 	client := &fasthttp.Client{
-		ReadTimeout:         30 * time.Second,
-		WriteTimeout:        30 * time.Second,
-		MaxConnDuration:     5 * time.Second,
 		MaxConnsPerHost:     3000,
 		MaxIdleConnDuration: 5 * time.Minute,
+		MaxConnDuration:     5 * time.Second,
+		ReadTimeout:         30 * time.Second,
+		WriteTimeout:        30 * time.Second,
 	}
 
 	var handler fasthttp.RequestHandler = func(ctx *fasthttp.RequestCtx) {

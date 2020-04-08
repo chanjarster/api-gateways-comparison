@@ -1,17 +1,16 @@
 FROM golang:1.13-alpine
 
 RUN apk add git
-RUN mkdir /go/src/proxy
-WORKDIR /go/src/proxy
-COPY ./src/* .
+RUN mkdir /proxy
+WORKDIR /proxy
+COPY ./. .
 
-RUN go get -d -v ./...
-RUN go build -v ./...
-
+RUN go get -v
+RUN go build -v
 
 FROM alpine:latest
 
-COPY --from=0 /go/src/proxy .
+COPY --from=0 /proxy/go-fasthttp .
 
 EXPOSE 9090
-CMD ["./proxy"]
+CMD ["./go-fasthttp"]
