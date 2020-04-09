@@ -6,7 +6,7 @@ WORKDIR /proxy
 COPY ./. .
 
 RUN go get -v
-RUN go build -v
+RUN go build -mod=vendor -v
 
 FROM alpine:latest
 
