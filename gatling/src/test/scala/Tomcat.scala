@@ -11,7 +11,7 @@ class Tomcat extends Simulation {
     exec(
       http("servlet")
         .get(BenchmarkConfig.uri)
-        .check(status.is(200))
+        .check(status.is(200), substring("</html>"))
     )
   }
 
