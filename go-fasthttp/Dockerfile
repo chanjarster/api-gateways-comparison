@@ -1,11 +1,10 @@
-FROM golang:1.13-alpine
+FROM golang:1.14-alpine
 
 RUN apk add git
 RUN mkdir /proxy
 WORKDIR /proxy
 COPY ./. .
 
-RUN go get -v
 RUN go build -mod=vendor -v
 
 FROM alpine:latest
