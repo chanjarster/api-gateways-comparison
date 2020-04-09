@@ -13,8 +13,8 @@ func makeProxy(target string) routing.Handler {
 
 	client := &fasthttp.Client{
 		MaxConnsPerHost:     3000,
-		MaxIdleConnDuration: 5 * time.Minute,
-		MaxConnDuration:     5 * time.Second,
+		MaxIdleConnDuration: 55 * time.Second,
+		MaxConnDuration:     55 * time.Second,
 		ReadTimeout:         30 * time.Second,
 		WriteTimeout:        30 * time.Second,
 	}
