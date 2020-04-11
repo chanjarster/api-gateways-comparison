@@ -1,8 +1,8 @@
 {
   "simulation": "ApiGateway",
   "simulationId": "apigateway",
-  "start": 1582510698102,
-  "description": "GoHttp",
+  "start": 1586582438311,
+  "description": "Go-Http",
   "scenarios": ["API Gateway"],
   "assertions": [
 

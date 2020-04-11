@@ -1,8 +1,8 @@
 {
   "simulation": "ApiGateway",
   "simulationId": "apigateway",
-  "start": 1582685316961,
-  "description": "GoFastHttp",
+  "start": 1586582649118,
+  "description": "Go-Fasthttp",
   "scenarios": ["API Gateway"],
   "assertions": [
 

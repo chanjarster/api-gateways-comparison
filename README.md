@@ -151,7 +151,7 @@ docker run -p 9090:9090 \
   --name scg \
   --add-host tomcat:<tomcat-ip> \
   -e HEAP_SIZE="2G" \
-  -e JAVA_OPTS="-Dreactor.netty.native=true"
+  -e JAVA_OPTS="-Dreactor.netty.native=true" \
   chanjarster/api-gateway-comp-scg
 ```
 
@@ -174,6 +174,20 @@ docker run -p 9090:9090 \
 ```
 
 `reactor.netty.native`为true时使用epoll/kqueue，为false时则使用nio，默认为false。
+
+### 启动Vertx
+
+```bash
+docker run -p 9090:9090 \
+  -p 1099:1099 \
+  -p 1100:1100 \
+  -d \
+  --name vertx \
+  --add-host tomcat:<tomcat-ip> \
+  -e HEAP_SIZE="2G" \
+  -e JAVA_OPTS="-DsocketType=EPOLL" \
+  chanjarster/api-gateway-comp-vertx
+```
 
 ### 启动Go(http proxy)
 

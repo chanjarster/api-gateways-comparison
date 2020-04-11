@@ -1,8 +1,8 @@
 {
   "simulation": "ApiGateway",
   "simulationId": "apigateway",
-  "start": 1582601427922,
-  "description": "NettyHttp",
+  "start": 1586580086600,
+  "description": "Netty-Http",
   "scenarios": ["API Gateway"],
   "assertions": [
 
