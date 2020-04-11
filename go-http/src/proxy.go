@@ -4,7 +4,9 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+	_ "net/http/pprof"
 	"net/url"
+	"time"
 )
 
 func makeProxy(backend string) http.HandlerFunc {
@@ -12,7 +14,10 @@ func makeProxy(backend string) http.HandlerFunc {
 	reverseProxy := httputil.NewSingleHostReverseProxy(target)
 
 	cloneTransport := http.DefaultTransport.(*http.Transport).Clone()
-	cloneTransport.MaxIdleConns = 500
+	cloneTransport.MaxIdleConns = 3000
+	cloneTransport.MaxConnsPerHost = 3000
+	cloneTransport.IdleConnTimeout = 55 * time.Second
+	cloneTransport.ResponseHeaderTimeout = 30 * time.Second
 	reverseProxy.Transport = cloneTransport
 
 	oldDirector := reverseProxy.Director
