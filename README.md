@@ -230,6 +230,10 @@ mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=S
 mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=Zuul2
 
 mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=ReactorNetty
+
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=Go-Http
+
+mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=Go-Fasthttp
 ```
 
 压API Gateway的时候要记得观察Tomcat的CPU利用率，如果利用率比直压的低，那么就要考虑修改API Gateway的参数。
@@ -240,7 +244,7 @@ mvn gatling:test -Dgatling.simulationClass=ApiGateway -Dgatling.runDescription=R
 
 ## 结果
 
-我是在2核 4G上压的，结果在[benchmark-results](benchmark-results)目录下。
+Tomcat和Gatling运行在2核 4G上，Gateway运行在4核8G上，结果在[benchmark-results](benchmark-results)目录下。
 
 ## 题外话
 
